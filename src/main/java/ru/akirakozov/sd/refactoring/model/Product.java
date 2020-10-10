@@ -37,4 +37,12 @@ public class Product {
                 ", name='" + name + '\'' +
                 '}';
     }
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

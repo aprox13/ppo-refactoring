@@ -12,6 +12,8 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Map;
 
+import static org.mockito.Mockito.lenient;
+
 public class HttpServletProviders {
 
     private static final String GET = "GET";
@@ -19,7 +21,7 @@ public class HttpServletProviders {
     public static HttpServletRequest provideGetRequestWithParams(Map<String, String> params) {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         Mockito.doReturn(GET).when(request).getMethod();
-        Mockito.when(request.getParameter(Mockito.anyString()))
+        lenient().when(request.getParameter(Mockito.anyString()))
                 .thenAnswer((Answer<String>) invocationOnMock -> params.getOrDefault(invocationOnMock.<String>getArgument(0), null));
         return request;
     }
@@ -37,17 +39,17 @@ public class HttpServletProviders {
         PrintWriter writer = new PrintWriter(bodyWriter);
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 
-        Mockito.doAnswer(invocationOnMock -> {
-            Mockito.doReturn(invocationOnMock.<String>getArgument(0)).when(response).getContentType();
+        lenient().doAnswer(invocationOnMock -> {
+            lenient().doReturn(invocationOnMock.<String>getArgument(0)).when(response).getContentType();
             return null;
         }).when(response).setContentType(Mockito.anyString());
 
-        Mockito.doAnswer(invocationOnMock -> {
-            Mockito.doReturn(invocationOnMock.<Integer>getArgument(0)).when(response).getStatus();
+        lenient().doAnswer(invocationOnMock -> {
+            lenient().doReturn(invocationOnMock.<Integer>getArgument(0)).when(response).getStatus();
             return null;
         }).when(response).setStatus(Mockito.anyInt());
 
-        Mockito.doReturn(writer).when(response).getWriter();
+        lenient().doReturn(writer).when(response).getWriter();
 
         return response;
     }
