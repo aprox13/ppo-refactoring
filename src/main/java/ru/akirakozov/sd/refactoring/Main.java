@@ -9,22 +9,19 @@ import ru.akirakozov.sd.refactoring.servlet.AddProductServlet;
 import ru.akirakozov.sd.refactoring.servlet.GetProductsServlet;
 import ru.akirakozov.sd.refactoring.servlet.QueryServlet;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-
 /**
  * @author akirakozov
  */
 public class Main {
 
     public static final String DB_FILE = "test.db";
+    public static final int PORT = 8081;
 
     public static void main(String[] args) throws Exception {
         ProductsDao productsDao = new JdbcProductsDao(DB_FILE);
         productsDao.createTableIfNotExists();
 
-        Server server = new Server(8081);
+        Server server = new Server(PORT);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
