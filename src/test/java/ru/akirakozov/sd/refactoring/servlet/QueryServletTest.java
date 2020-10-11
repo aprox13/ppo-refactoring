@@ -1,6 +1,7 @@
 package ru.akirakozov.sd.refactoring.servlet;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static ru.akirakozov.sd.refactoring.common.TestUtils.mapOf;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -72,7 +74,7 @@ public class QueryServletTest {
                 .collect(Collectors.toList());
 
         productsDao = new JdbcProductsDao(DB_FILE);
-        servlet = new QueryServlet();
+        servlet = new QueryServlet(productsDao);
     }
 
     @After
@@ -122,7 +124,7 @@ public class QueryServletTest {
             Function<Stream<Product>, Long> function
     ) throws ServletException, IOException {
         if (!products.isEmpty()) {
-           products.forEach(productsDao::add);
+            products.forEach(productsDao::add);
         }
 
         String expectedAnswer = function.apply(products.stream()).toString();
@@ -171,7 +173,7 @@ public class QueryServletTest {
                 Collections.emptyList(),
                 QueryCommand.SUM,
                 productStream -> productStream.mapToLong(Product::getPrice).sum()
-                );
+        );
     }
 
     @Test
@@ -201,5 +203,32 @@ public class QueryServletTest {
 
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
         assertThat(writer.toString(), is("Unknown command: null\n"));
+    }
+
+    private void commandSupported(QueryCommand queryCommand) {
+        Writer printWriter = new StringWriter();
+        HttpServletResponse resp = HttpServletProviders.provideResponse(printWriter);
+        HttpServletRequest r =
+                HttpServletProviders.provideGetRequestWithParams(
+                        Collections.singletonMap("command", queryCommand.name().toLowerCase()
+                        )
+                );
+
+        try {
+            servlet.service(r, resp);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+
+        String wrong = "Unknown command: " + queryCommand.name().toLowerCase() + "\n";
+
+        assertThat(printWriter.toString(), not(is(wrong)));
+    }
+
+    @Test
+    public void allCommandSupported_Ok() {
+        Arrays.stream(QueryCommand.values())
+                .filter(q -> q != QueryCommand.UNKNOWN)
+                .forEach(this::commandSupported);
     }
 }

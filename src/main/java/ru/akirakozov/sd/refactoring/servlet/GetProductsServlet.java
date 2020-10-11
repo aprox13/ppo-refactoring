@@ -28,7 +28,7 @@ public class GetProductsServlet extends HttpServlet {
         List<Product> products = productsDao.getAll();
 
         Html200ResponseEnricher.newResponseEnricher()
-                .wrapToHtmlTag(true)
+                .wrapToHtmlTag()
                 .addLines(products.stream().map(Product::toHtml).collect(Collectors.toList()))
                 .enrich(response);
     }

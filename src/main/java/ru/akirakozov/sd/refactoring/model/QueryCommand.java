@@ -4,7 +4,9 @@ public enum QueryCommand {
     MIN,
     MAX,
     SUM,
-    COUNT;
+    COUNT,
+
+    UNKNOWN;
 
     @Override
     public String toString() {

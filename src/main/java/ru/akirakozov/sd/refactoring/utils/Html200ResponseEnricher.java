@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class Html200ResponseEnricher {
     private static final String CONTENT_TYPE = "text/html";
@@ -19,8 +20,8 @@ public class Html200ResponseEnricher {
         return new Html200ResponseEnricher();
     }
 
-    public Html200ResponseEnricher wrapToHtmlTag(boolean wrap) {
-        this.wrapToHtmlTagFlag = wrap;
+    public Html200ResponseEnricher wrapToHtmlTag() {
+        this.wrapToHtmlTagFlag = true;
         return this;
     }
 
@@ -49,5 +50,10 @@ public class Html200ResponseEnricher {
         }
 
         response.getWriter().print(data);
+    }
+
+    public Html200ResponseEnricher accept(Consumer<Html200ResponseEnricher> consumer) {
+        consumer.accept(this);
+        return this;
     }
 }
