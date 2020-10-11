@@ -34,6 +34,7 @@ public class ProductDbSupport {
     }
 
     public static void addProducts(Product... products) {
+        assert products.length != 0;
         String sql = Arrays.stream(products).map(p -> String.format("(\"%s\", \"%d\")", p.getName(), p.getPrice()))
                 .collect(Collectors.joining(
                         ",",
