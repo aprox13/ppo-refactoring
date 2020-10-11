@@ -55,7 +55,7 @@ public class QueryServletTest {
 
     private Writer writer;
     private HttpServletResponse response;
-    private final HttpServlet servlet = new QueryServlet();
+    private HttpServlet servlet;
     private List<Product> products;
 
 
@@ -72,6 +72,7 @@ public class QueryServletTest {
                 .collect(Collectors.toList());
 
         productsDao = new JdbcProductsDao(DB_FILE);
+        servlet = new QueryServlet();
     }
 
     @After
@@ -180,5 +181,25 @@ public class QueryServletTest {
                 QueryCommand.SUM,
                 productStream -> productStream.mapToLong(Product::getPrice).sum()
         );
+    }
+
+    @Test
+    public void correctlyReturnUnknownCommand_Ok() throws ServletException, IOException {
+        HttpServletRequest request = HttpServletProviders.provideGetRequestWithParams(Collections.singletonMap("command", "cmd"));
+
+        servlet.service(request, response);
+
+        assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
+        assertThat(writer.toString(), is("Unknown command: cmd\n"));
+    }
+
+    @Test
+    public void correctlyReturnUnknownCommandOnNull_Ok() throws ServletException, IOException {
+        HttpServletRequest request = HttpServletProviders.provideGetRequestWithParams(Collections.emptyMap());
+
+        servlet.service(request, response);
+
+        assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
+        assertThat(writer.toString(), is("Unknown command: null\n"));
     }
 }
