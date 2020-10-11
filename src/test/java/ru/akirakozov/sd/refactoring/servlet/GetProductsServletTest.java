@@ -29,11 +29,11 @@ import static org.hamcrest.core.Is.is;
 @RunWith(MockitoJUnitRunner.class)
 public class GetProductsServletTest {
 
-    private static final String DB_FILE = "test.db";
+    private static final String DB_FILE = "GetProductsServletTest.db";
     private final DBSupport dbSupport = new DBSupport(DB_FILE);
     private ProductsDao productsDao;
 
-    private final HttpServlet servlet = new GetProductsServlet();
+    private HttpServlet servlet;
     private static final String RESULT_TEMPLATE = "<html><body>\n%s</body></html>\n";
     private static final String EMPTY_RESPONSE = String.format(RESULT_TEMPLATE, "");
 
@@ -50,6 +50,7 @@ public class GetProductsServletTest {
         request = HttpServletProviders.provideGetRequestWithParams(Collections.emptyMap());
         response = HttpServletProviders.provideResponse(writer);
         productsDao = new JdbcProductsDao(DB_FILE);
+        servlet = new GetProductsServlet(productsDao);
     }
 
     @After
