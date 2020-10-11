@@ -3,7 +3,8 @@ package ru.akirakozov.sd.refactoring.servlet;
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.model.Product;
 import ru.akirakozov.sd.refactoring.model.QueryCommand;
-import ru.akirakozov.sd.refactoring.utils.Html200ResponseEnricher;
+import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
+import ru.akirakozov.sd.refactoring.utils.ResponseEnricher;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ public class QueryServlet extends HttpServlet {
 
     private final ProductsDao productsDao;
     private final Map<QueryCommand, String> titles;
-    private final Map<QueryCommand, Consumer<Html200ResponseEnricher>> enrichers;
+    private final Map<QueryCommand, Consumer<HtmlBuilder>> enrichers;
 
     public QueryServlet(ProductsDao productsDao) {
         this.productsDao = productsDao;
@@ -38,19 +39,19 @@ public class QueryServlet extends HttpServlet {
         enrichers.put(QueryCommand.SUM, this::enrichSum);
     }
 
-    private void enrichMax(Html200ResponseEnricher enricher) {
+    private void enrichMax(HtmlBuilder enricher) {
         Optional.ofNullable(productsDao.max()).map(Product::toHtml).ifPresent(enricher::addLine);
     }
 
-    private void enrichMin(Html200ResponseEnricher enricher) {
+    private void enrichMin(HtmlBuilder enricher) {
         Optional.ofNullable(productsDao.min()).map(Product::toHtml).ifPresent(enricher::addLine);
     }
 
-    private void enrichSum(Html200ResponseEnricher enricher) {
+    private void enrichSum(HtmlBuilder enricher) {
         enricher.addLine(String.valueOf(productsDao.sum()));
     }
 
-    private void enrichCount(Html200ResponseEnricher enricher) {
+    private void enrichCount(HtmlBuilder enricher) {
         enricher.addLine(String.valueOf(productsDao.count()));
     }
 
@@ -64,17 +65,22 @@ public class QueryServlet extends HttpServlet {
                 .findFirst()
                 .orElse(QueryCommand.UNKNOWN);
 
-        Html200ResponseEnricher enricher = Html200ResponseEnricher.newResponseEnricher();
+        HtmlBuilder body = HtmlBuilder.newBuilder();
 
         if (command == QueryCommand.UNKNOWN) {
-            enricher.addLine("Unknown command: " + commandRaw);
+            body.addLine("Unknown command: " + commandRaw);
         } else {
-            enricher.wrapToHtmlTag()
+            body.wrapToHtmlTag()
                     .addLine(titles.get(command))
                     .accept(enrichers.get(command));
         }
 
-        enricher.enrich(response);
+
+        ResponseEnricher.newResponseEnricher()
+                .withBody(body)
+                .withCode(ResponseEnricher.STATUS_CODE_200)
+                .withContentType(ResponseEnricher.HTML_CONTENT_TYPE)
+                .enrich(response);
     }
 
 }

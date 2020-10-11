@@ -2,7 +2,8 @@ package ru.akirakozov.sd.refactoring.servlet;
 
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.model.Product;
-import ru.akirakozov.sd.refactoring.utils.Html200ResponseEnricher;
+import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
+import ru.akirakozov.sd.refactoring.utils.ResponseEnricher;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -27,9 +28,15 @@ public class GetProductsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         List<Product> products = productsDao.getAll();
 
-        Html200ResponseEnricher.newResponseEnricher()
+
+        HtmlBuilder body = HtmlBuilder.newBuilder()
                 .wrapToHtmlTag()
-                .addLines(products.stream().map(Product::toHtml).collect(Collectors.toList()))
+                .addLines(products.stream().map(Product::toHtml).collect(Collectors.toList()));
+
+        ResponseEnricher.newResponseEnricher()
+                .withContentType(ResponseEnricher.HTML_CONTENT_TYPE)
+                .withCode(ResponseEnricher.STATUS_CODE_200)
+                .withBody(body)
                 .enrich(response);
     }
 }
