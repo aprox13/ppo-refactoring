@@ -78,6 +78,16 @@ public class JdbcProductsDao implements ProductsDao {
         );
     }
 
+    @Override
+    public void createTableIfNotExists() {
+        dbSupport.executeScript("create.sql");
+    }
+
+    @Override
+    public void clearAll() {
+        dbSupport.executeScript("clear_products.sql");
+    }
+
 
     private long singlePositiveValueFromRs(ResultSet resultSet) {
         try {

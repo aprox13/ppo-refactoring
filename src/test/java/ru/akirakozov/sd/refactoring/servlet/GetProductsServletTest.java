@@ -9,7 +9,6 @@ import ru.akirakozov.sd.refactoring.common.*;
 import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.model.Product;
-import ru.akirakozov.sd.refactoring.utils.DBSupport;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -30,7 +29,6 @@ import static org.hamcrest.core.Is.is;
 public class GetProductsServletTest {
 
     private static final String DB_FILE = "GetProductsServletTest.db";
-    private final DBSupport dbSupport = new DBSupport(DB_FILE);
     private ProductsDao productsDao;
 
     private HttpServlet servlet;
@@ -43,14 +41,14 @@ public class GetProductsServletTest {
 
     @Before
     public void init() {
-        dbSupport.executeScript("create.sql");
-        dbSupport.executeScript("clear_products.sql");
-
         writer = new StringWriter();
         request = HttpServletProviders.provideGetRequestWithParams(Collections.emptyMap());
         response = HttpServletProviders.provideResponse(writer);
         productsDao = new JdbcProductsDao(DB_FILE);
         servlet = new GetProductsServlet(productsDao);
+
+        productsDao.createTableIfNotExists();
+        productsDao.clearAll();
     }
 
     @After

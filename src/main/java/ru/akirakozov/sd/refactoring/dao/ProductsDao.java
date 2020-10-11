@@ -13,4 +13,7 @@ public interface ProductsDao {
 
     Product min();
     Product max();
+
+    void createTableIfNotExists();
+    void clearAll();
 }

@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import ru.akirakozov.sd.refactoring.model.DBNamings;
 import ru.akirakozov.sd.refactoring.model.Product;
 import ru.akirakozov.sd.refactoring.utils.DBSupport;
 
@@ -30,10 +31,10 @@ public class ProductsDaoTest {
 
     @Before
     public void init() {
-        dbSupport.executeScript("create.sql");
-        dbSupport.executeScript("clear_products.sql");
-
         productsDao = new JdbcProductsDao(DB_FILE);
+
+        productsDao.createTableIfNotExists();
+        productsDao.clearAll();
 
         products = IntStream.range(0, 10)
                 .mapToObj(i -> new Product(i * 10L, "product# " + i))
@@ -47,7 +48,14 @@ public class ProductsDaoTest {
 
     @Test
     public void returnNonEmpty_Ok() {
-        Arrays.stream(products).forEach(productsDao::add);
+        Arrays.stream(products).forEach(p -> {
+            String sql = String.format(
+                    "INSERT INTO %s (%s, %s) VALUES (\"%s\", \"%s\")",
+                    DBNamings.PRODUCT_TABLE, DBNamings.NAME_FIELD, DBNamings.PRICE_FIELD,
+                    p.getName(), p.getPrice()
+            );
+            dbSupport.processSql(sql, Function.identity());
+        });
 
         assertThat(productsDao.getAll(), contains(products));
     }

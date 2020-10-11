@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
-import ru.akirakozov.sd.refactoring.utils.DBSupport;
 import ru.akirakozov.sd.refactoring.common.HttpServletProviders;
 import ru.akirakozov.sd.refactoring.common.SuccessfulHtmlMatcher;
 import ru.akirakozov.sd.refactoring.model.Product;
@@ -44,14 +43,13 @@ public class AddProductServletTest {
 
     @Before
     public void init() {
-        DBSupport dbSupport = new DBSupport(DB_FILE);
-        dbSupport.executeScript("create.sql");
-        dbSupport.executeScript("clear_products.sql");
-
         writer = new StringWriter();
         response = HttpServletProviders.provideResponse(writer);
         productsDao = new JdbcProductsDao(DB_FILE);
         servlet = new AddProductServlet(productsDao);
+
+        productsDao.createTableIfNotExists();
+        productsDao.clearAll();
     }
 
     @After

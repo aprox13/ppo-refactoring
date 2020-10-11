@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
-import ru.akirakozov.sd.refactoring.utils.DBSupport;
 import ru.akirakozov.sd.refactoring.common.HttpServletProviders;
 import ru.akirakozov.sd.refactoring.common.SuccessfulHtmlMatcher;
 import ru.akirakozov.sd.refactoring.model.Product;
@@ -36,7 +35,6 @@ import static ru.akirakozov.sd.refactoring.common.TestUtils.mapOf;
 public class QueryServletTest {
 
     private static final String DB_FILE = "test.db";
-    private final DBSupport dbSupport = new DBSupport(DB_FILE);
     private ProductsDao productsDao;
 
     private static final String HTML_TEMPLATE = "<html><body>\n%s</body></html>\n";
@@ -63,9 +61,6 @@ public class QueryServletTest {
 
     @Before
     public void init() {
-        dbSupport.executeScript("create.sql");
-        dbSupport.executeScript("clear_products.sql");
-
         writer = new StringWriter();
         response = HttpServletProviders.provideResponse(writer);
 
@@ -75,6 +70,9 @@ public class QueryServletTest {
 
         productsDao = new JdbcProductsDao(DB_FILE);
         servlet = new QueryServlet(productsDao);
+
+        productsDao.createTableIfNotExists();
+        productsDao.clearAll();
     }
 
     @After
