@@ -3,6 +3,7 @@ package ru.akirakozov.sd.refactoring.utils;
 import ru.akirakozov.sd.refactoring.model.DBNamings;
 import ru.akirakozov.sd.refactoring.model.Product;
 
+import javax.servlet.http.HttpServletRequest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,5 +30,12 @@ public class ProductConverterUtils {
             res.add(tmp);
         }
         return res;
+    }
+
+    public static Product fromHttpRequest(HttpServletRequest request) {
+        String name = String.valueOf(request.getParameter("name"));
+        long price = Long.parseLong(request.getParameter("price"));
+
+        return new Product(price, name);
     }
 }

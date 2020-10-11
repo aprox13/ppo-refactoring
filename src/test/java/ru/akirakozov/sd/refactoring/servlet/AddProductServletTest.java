@@ -25,32 +25,33 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static ru.akirakozov.sd.refactoring.common.TestUtils.mapOf;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AddProductServletTest {
 
-    private static final String DB_FILE = "test.db";
-    private final DBSupport dbSupport = new DBSupport(DB_FILE);
+    private static final String DB_FILE = "AddProductServletTest.db";
+
     private ProductsDao productsDao;
 
     private static final String NAME_PARAM = "name";
     private static final String PRICE_PARAM = "price";
 
-    private final HttpServlet servlet = new AddProductServlet();
+    private HttpServlet servlet;
     private Writer writer;
     private HttpServletResponse response;
 
     @Before
     public void init() {
+        DBSupport dbSupport = new DBSupport(DB_FILE);
         dbSupport.executeScript("create.sql");
         dbSupport.executeScript("clear_products.sql");
 
         writer = new StringWriter();
         response = HttpServletProviders.provideResponse(writer);
         productsDao = new JdbcProductsDao(DB_FILE);
+        servlet = new AddProductServlet(productsDao);
     }
 
     @After

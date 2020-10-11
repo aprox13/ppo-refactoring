@@ -3,7 +3,6 @@ package ru.akirakozov.sd.refactoring;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.sqlite.core.DB;
 import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.servlet.AddProductServlet;
@@ -41,7 +40,7 @@ public class Main {
         context.setContextPath("/");
         server.setHandler(context);
 
-        context.addServlet(new ServletHolder(new AddProductServlet()), "/add-product");
+        context.addServlet(new ServletHolder(new AddProductServlet(productsDao)), "/add-product");
         context.addServlet(new ServletHolder(new GetProductsServlet(productsDao)),"/get-products");
         context.addServlet(new ServletHolder(new QueryServlet()),"/query");
 
