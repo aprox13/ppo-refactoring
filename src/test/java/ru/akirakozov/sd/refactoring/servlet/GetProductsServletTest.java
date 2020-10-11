@@ -6,7 +6,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import ru.akirakozov.sd.refactoring.common.*;
+import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
+import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.model.Product;
+import ru.akirakozov.sd.refactoring.utils.DBSupport;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -26,6 +29,9 @@ import static org.hamcrest.core.Is.is;
 @RunWith(MockitoJUnitRunner.class)
 public class GetProductsServletTest {
 
+    private static final String DB_FILE = "test.db";
+    private final DBSupport dbSupport = new DBSupport(DB_FILE);
+    private ProductsDao productsDao;
 
     private final HttpServlet servlet = new GetProductsServlet();
     private static final String RESULT_TEMPLATE = "<html><body>\n%s</body></html>\n";
@@ -37,12 +43,13 @@ public class GetProductsServletTest {
 
     @Before
     public void init() {
-        DBSupport.executeScript("create.sql");
-        DBSupport.executeScript("clear_products.sql");
+        dbSupport.executeScript("create.sql");
+        dbSupport.executeScript("clear_products.sql");
 
         writer = new StringWriter();
         request = HttpServletProviders.provideGetRequestWithParams(Collections.emptyMap());
         response = HttpServletProviders.provideResponse(writer);
+        productsDao = new JdbcProductsDao(DB_FILE);
     }
 
     @After
@@ -63,7 +70,7 @@ public class GetProductsServletTest {
                 .mapToObj(i -> new Product(i * 100L, String.format("product no.%d", i)))
                 .toArray(Product[]::new);
 
-        ProductDbSupport.addProducts(products);
+        Arrays.stream(products).forEach(productsDao::add);
 
         servlet.service(request, response);
 

@@ -5,9 +5,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
-import ru.akirakozov.sd.refactoring.common.DBSupport;
+import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
+import ru.akirakozov.sd.refactoring.dao.ProductsDao;
+import ru.akirakozov.sd.refactoring.utils.DBSupport;
 import ru.akirakozov.sd.refactoring.common.HttpServletProviders;
-import ru.akirakozov.sd.refactoring.common.ProductDbSupport;
 import ru.akirakozov.sd.refactoring.common.SuccessfulHtmlMatcher;
 import ru.akirakozov.sd.refactoring.model.Product;
 import ru.akirakozov.sd.refactoring.model.QueryCommand;
@@ -31,6 +32,10 @@ import static ru.akirakozov.sd.refactoring.common.TestUtils.mapOf;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QueryServletTest {
+
+    private static final String DB_FILE = "test.db";
+    private final DBSupport dbSupport = new DBSupport(DB_FILE);
+    private ProductsDao productsDao;
 
     private static final String HTML_TEMPLATE = "<html><body>\n%s</body></html>\n";
     private static final String COUNT_TEMPLATE = String.format(
@@ -56,8 +61,8 @@ public class QueryServletTest {
 
     @Before
     public void init() {
-        DBSupport.executeScript("create.sql");
-        DBSupport.executeScript("clear_products.sql");
+        dbSupport.executeScript("create.sql");
+        dbSupport.executeScript("clear_products.sql");
 
         writer = new StringWriter();
         response = HttpServletProviders.provideResponse(writer);
@@ -66,6 +71,7 @@ public class QueryServletTest {
                 .mapToObj(i -> new Product(i * 10L, "product#" + i))
                 .collect(Collectors.toList());
 
+        productsDao = new JdbcProductsDao(DB_FILE);
     }
 
     @After
@@ -83,7 +89,7 @@ public class QueryServletTest {
         String expectedProductHtml;
 
         if (!products.isEmpty()) {
-            ProductDbSupport.addProducts(products.toArray(new Product[0]));
+            products.forEach(productsDao::add);
             @SuppressWarnings("OptionalGetWithoutIsPresent")
             Product expectedProduct = function.apply(products.stream()).get();
 
@@ -115,7 +121,7 @@ public class QueryServletTest {
             Function<Stream<Product>, Long> function
     ) throws ServletException, IOException {
         if (!products.isEmpty()) {
-           ProductDbSupport.addProducts(products.toArray(new Product[0]));
+           products.forEach(productsDao::add);
         }
 
         String expectedAnswer = function.apply(products.stream()).toString();

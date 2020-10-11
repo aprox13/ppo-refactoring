@@ -6,9 +6,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
-import ru.akirakozov.sd.refactoring.common.DBSupport;
+import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
+import ru.akirakozov.sd.refactoring.dao.ProductsDao;
+import ru.akirakozov.sd.refactoring.utils.DBSupport;
 import ru.akirakozov.sd.refactoring.common.HttpServletProviders;
-import ru.akirakozov.sd.refactoring.common.ProductDbSupport;
 import ru.akirakozov.sd.refactoring.common.SuccessfulHtmlMatcher;
 import ru.akirakozov.sd.refactoring.model.Product;
 
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +32,10 @@ import static ru.akirakozov.sd.refactoring.common.TestUtils.mapOf;
 @RunWith(MockitoJUnitRunner.class)
 public class AddProductServletTest {
 
+    private static final String DB_FILE = "test.db";
+    private final DBSupport dbSupport = new DBSupport(DB_FILE);
+    private ProductsDao productsDao;
+
     private static final String NAME_PARAM = "name";
     private static final String PRICE_PARAM = "price";
 
@@ -41,11 +45,12 @@ public class AddProductServletTest {
 
     @Before
     public void init() {
-        DBSupport.executeScript("create.sql");
-        DBSupport.executeScript("clear_products.sql");
+        dbSupport.executeScript("create.sql");
+        dbSupport.executeScript("clear_products.sql");
 
         writer = new StringWriter();
         response = HttpServletProviders.provideResponse(writer);
+        productsDao = new JdbcProductsDao(DB_FILE);
     }
 
     @After
@@ -59,7 +64,7 @@ public class AddProductServletTest {
 
     @Test
     public void correctlyAdd_Ok() throws ServletException, IOException {
-        assertThat(ProductDbSupport.getRows(), hasSize(0));
+        assertThat(productsDao.count(), is(0L));
 
         Product product = new Product(1000L, "name");
         HttpServletRequest request = HttpServletProviders.provideGetRequestWithParams(productToParams(product));
@@ -69,8 +74,7 @@ public class AddProductServletTest {
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
         assertThat(writer.toString(), is("OK\n"));
 
-        List<Product> rows = ProductDbSupport.getRows();
-        assertThat(rows, contains(product));
+        assertThat(productsDao.getAll(), contains(product));
     }
 
     @Test(expected = NumberFormatException.class)
@@ -82,7 +86,7 @@ public class AddProductServletTest {
 
     @Test
     public void addWithMissedName_Ok() throws ServletException, IOException {
-        assertThat(ProductDbSupport.getRows(), hasSize(0));
+        assertThat(productsDao.count(), is(0L));
 
         HttpServletRequest request = HttpServletProviders.provideGetRequestWithParams(Collections.singletonMap(PRICE_PARAM, "1000"));
 
@@ -91,15 +95,13 @@ public class AddProductServletTest {
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
         assertThat(writer.toString(), is("OK\n"));
 
-        List<Product> rows = ProductDbSupport.getRows();
-
-        assertThat(rows, contains(new Product(1000L, "null")));
+        assertThat(productsDao.getAll(), contains(new Product(1000L, "null")));
     }
 
     @Test
     public void doesnotFailOnDuplication_Fail() throws ServletException, IOException {
         Product product = new Product(10L, "duplication");
-        ProductDbSupport.addProducts(product);
+        productsDao.add(product);
 
         HttpServletRequest request = HttpServletProviders.provideGetRequestWithParams(productToParams(product));
 
@@ -108,8 +110,6 @@ public class AddProductServletTest {
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
         assertThat(writer.toString(), is("OK\n"));
 
-        List<Product> rows = ProductDbSupport.getRows();
-
-        assertThat(rows, contains(product, product));
+        assertThat(productsDao.getAll(), contains(product, product));
     }
 }

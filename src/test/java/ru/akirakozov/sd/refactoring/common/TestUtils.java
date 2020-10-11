@@ -17,12 +17,4 @@ public class TestUtils {
         res.put(k2, v2);
         return res;
     }
-
-    public static String getResourceAsString(String name) {
-        InputStream is = TestUtils.class.getClassLoader().getResourceAsStream(name);
-
-        return new BufferedReader(new InputStreamReader(Objects.requireNonNull(is)))
-                .lines()
-                .collect(Collectors.joining(System.lineSeparator()));
-    }
 }
