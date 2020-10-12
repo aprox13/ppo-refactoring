@@ -4,7 +4,7 @@ import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.model.Product;
 import ru.akirakozov.sd.refactoring.model.QueryCommand;
 import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
-import ru.akirakozov.sd.refactoring.utils.ResponseEnricher;
+import ru.akirakozov.sd.refactoring.response.ResponseEnricher;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

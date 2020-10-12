@@ -1,12 +1,7 @@
-package ru.akirakozov.sd.refactoring.utils;
-
-import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
+package ru.akirakozov.sd.refactoring.response;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 public class ResponseEnricher {
     public static final String HTML_CONTENT_TYPE = "text/html";
