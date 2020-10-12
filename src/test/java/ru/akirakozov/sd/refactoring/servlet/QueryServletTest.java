@@ -12,6 +12,7 @@ import ru.akirakozov.sd.refactoring.common.HttpServletProviders;
 import ru.akirakozov.sd.refactoring.common.SuccessfulHtmlMatcher;
 import ru.akirakozov.sd.refactoring.model.Product;
 import ru.akirakozov.sd.refactoring.model.QueryCommand;
+import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -34,23 +35,12 @@ import static ru.akirakozov.sd.refactoring.common.TestUtils.mapOf;
 @RunWith(MockitoJUnitRunner.class)
 public class QueryServletTest {
 
-    private static final String DB_FILE = "test.db";
+    private static final String DB_FILE = "QueryServletTest.db";
     private ProductsDao productsDao;
 
-    private static final String HTML_TEMPLATE = "<html><body>\n%s</body></html>\n";
-    private static final String COUNT_TEMPLATE = String.format(
-            HTML_TEMPLATE,
-            "Number of products: \n%s"
-    );
-
-    private static final String SUM_TEMPLATE = String.format(
-            HTML_TEMPLATE,
-            "Summary price: \n%s"
-    );
-
     private static final Map<QueryCommand, String> SUM_COUNT_TEMPLATES = mapOf(
-            QueryCommand.COUNT, COUNT_TEMPLATE,
-            QueryCommand.SUM, SUM_TEMPLATE
+            QueryCommand.COUNT, "Number of products: ",
+            QueryCommand.SUM, "Summary price: "
     );
 
     private Writer writer;
@@ -86,33 +76,21 @@ public class QueryServletTest {
 
 
     private void minMaxSpec(List<Product> products, QueryCommand command, Function<Stream<Product>, Optional<Product>> function) throws ServletException, IOException {
-        String answerTemplate = "<h1>Product with %s price: </h1>\n%s";
-        String expectedProductHtml;
+        HtmlBuilder expected = HtmlBuilder.newBuilder()
+                .wrapToHtmlTag()
+                .addLine(String.format("<h1>Product with %s price: </h1>", command.name().toLowerCase()));
 
         if (!products.isEmpty()) {
             products.forEach(productsDao::add);
-            @SuppressWarnings("OptionalGetWithoutIsPresent")
-            Product expectedProduct = function.apply(products.stream()).get();
 
-            expectedProductHtml = String.format("%s\t%d</br>\n", expectedProduct.getName(), expectedProduct.getPrice());
-
-        } else {
-            expectedProductHtml = "";
+            function.apply(products.stream()).map(Product::toHtml).ifPresent(expected::addLine);
         }
-
-        String expectedHtml = String.format(
-                HTML_TEMPLATE,
-                String.format(
-                        answerTemplate,
-                        command, expectedProductHtml
-                )
-        );
 
         HttpServletRequest request = commandRequest(command);
         servlet.service(request, response);
 
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
-        assertThat(writer.toString(), is(expectedHtml));
+        assertThat(writer.toString(), is(expected.build()));
 
     }
 
@@ -131,8 +109,13 @@ public class QueryServletTest {
 
         servlet.service(request, response);
 
+        HtmlBuilder htmlBuilder = HtmlBuilder.newBuilder()
+                .wrapToHtmlTag()
+                .addLine(SUM_COUNT_TEMPLATES.get(command))
+                .addLine(expectedAnswer);
+
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
-        assertThat(writer.toString(), is(String.format(SUM_COUNT_TEMPLATES.get(command), expectedAnswer + "\n")));
+        assertThat(writer.toString(), is(htmlBuilder.build()));
     }
 
     @Test

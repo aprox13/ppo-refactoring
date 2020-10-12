@@ -9,6 +9,7 @@ import ru.akirakozov.sd.refactoring.common.*;
 import ru.akirakozov.sd.refactoring.dao.JdbcProductsDao;
 import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.model.Product;
+import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,8 +33,7 @@ public class GetProductsServletTest {
     private ProductsDao productsDao;
 
     private HttpServlet servlet;
-    private static final String RESULT_TEMPLATE = "<html><body>\n%s</body></html>\n";
-    private static final String EMPTY_RESPONSE = String.format(RESULT_TEMPLATE, "");
+    private static final String EMPTY_RESPONSE = HtmlBuilder.newBuilder().wrapToHtmlTag().build();
 
     private Writer writer;
     private HttpServletRequest request;
@@ -73,13 +73,14 @@ public class GetProductsServletTest {
 
         servlet.service(request, response);
 
-        String productsHtml = Arrays.stream(products)
-                .map(p -> String.format("%s\t%d</br>\n", p.getName(), p.getPrice()))
-                .collect(Collectors.joining());
+        HtmlBuilder expectedHtml = HtmlBuilder.newBuilder()
+                .wrapToHtmlTag();
 
-        String expected = String.format(RESULT_TEMPLATE, productsHtml);
+        Arrays.stream(products)
+                .map(Product::toHtml)
+                .forEach(expectedHtml::addLine);
 
-        assertThat(writer.toString(), is(expected));
+        assertThat(writer.toString(), is(expectedHtml.build()));
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
     }
 

@@ -11,6 +11,7 @@ import ru.akirakozov.sd.refactoring.dao.ProductsDao;
 import ru.akirakozov.sd.refactoring.common.HttpServletProviders;
 import ru.akirakozov.sd.refactoring.common.SuccessfulHtmlMatcher;
 import ru.akirakozov.sd.refactoring.model.Product;
+import ru.akirakozov.sd.refactoring.response.HtmlBuilder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -40,6 +41,8 @@ public class AddProductServletTest {
     private HttpServlet servlet;
     private Writer writer;
     private HttpServletResponse response;
+
+    private static final String EXPECTED_BODY = HtmlBuilder.newBuilder().addLine("OK").build();
 
     @Before
     public void init() {
@@ -71,7 +74,7 @@ public class AddProductServletTest {
         servlet.service(request, response);
 
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
-        assertThat(writer.toString(), is("OK\n"));
+        assertThat(writer.toString(), is(EXPECTED_BODY));
 
         assertThat(productsDao.getAll(), contains(product));
     }
@@ -92,7 +95,7 @@ public class AddProductServletTest {
         servlet.service(request, response);
 
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
-        assertThat(writer.toString(), is("OK\n"));
+        assertThat(writer.toString(), is(EXPECTED_BODY));
 
         assertThat(productsDao.getAll(), contains(new Product(1000L, "null")));
     }
@@ -107,7 +110,7 @@ public class AddProductServletTest {
         servlet.service(request, response);
 
         assertThat(response, SuccessfulHtmlMatcher.isSuccessfulHtml());
-        assertThat(writer.toString(), is("OK\n"));
+        assertThat(writer.toString(), is(EXPECTED_BODY));
 
         assertThat(productsDao.getAll(), contains(product, product));
     }
